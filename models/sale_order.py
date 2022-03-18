@@ -10,17 +10,36 @@ _logger = logging.getLogger(__name__)
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
-    is_booking_order = fields.Boolean(string='Is Booking Order')
-    team = fields.Many2one('service.team', string='Team')
-    team_leader = fields.Many2one('res.users', string='Team Leader')
-    team_members = fields.Many2many('res.users', string='Team Members')
-    booking_start = fields.Datetime(string='Booking Start')
-    booking_end = fields.Datetime(string='Booking End')
-    wo_count = fields.Integer(string='Work Order', compute='_compute_wo_count')
-
+    is_booking_order = fields.Boolean(
+        string='Is Booking Order'
+        )
+    team = fields.Many2one(
+        'service.team', 
+        string='Team'
+        )
+    team_leader = fields.Many2one(
+        'res.users', 
+        string='Team Leader'
+        )
+    team_members = fields.Many2many(
+        'res.users', 
+        string='Team Members'
+        )
+    booking_start = fields.Datetime(
+        string='Booking Start'
+        )
+    booking_end = fields.Datetime(
+        string='Booking End'
+        )
+    wo_count = fields.Integer(
+        string='Work Order', 
+        compute='_compute_wo_count'
+        )
     def _compute_wo_count(self):
-        wo_data = self.env['work.order'].sudo().read_group([('bo_reference', 'in', self.ids)], ['bo_reference'],
-                                                           ['bo_reference'])
+        wo_data = self.env['work.order'].sudo().read_group(
+            [('bo_reference', 'in', self.ids)], 
+            ['bo_reference'],['bo_reference']
+            )
         result = dict((data['bo_reference'][0], data['bo_reference_count']) for data in wo_data)
         for wo in self:
             wo.wo_count = result.get(wo.id, 0)
@@ -38,7 +57,8 @@ class SaleOrder(models.Model):
     @api.multi
     def action_check(self):
         for check in self:
-            wo = self.env['work.order'].search(['|', '|', '|', ('team_leader', 'in', [g.id for g in self.team_members]),
+            wo = self.env['work.order'].search(['|', '|', '|', 
+                                                ('team_leader', 'in', [g.id for g in self.team_members]),
                                                 ('team_members', 'in', [self.team_leader.id]),
                                                 ('team_leader', '=', self.team_leader.id),
                                                 ('team_members', 'in', [g.id for g in self.team_members]),
@@ -53,7 +73,8 @@ class SaleOrder(models.Model):
     def action_confirm(self):
         res = super(SaleOrder, self).action_confirm()
         for order in self:
-            wo = self.env['work.order'].search(['|', '|', '|', ('team_leader', 'in', [g.id for g in self.team_members]),
+            wo = self.env['work.order'].search(['|', '|', '|', 
+                                                ('team_leader', 'in', [g.id for g in self.team_members]),
                                                 ('team_members', 'in', [self.team_leader.id]),
                                                 ('team_leader', '=', self.team_leader.id),
                                                 ('team_members', 'in', [g.id for g in self.team_members]),
